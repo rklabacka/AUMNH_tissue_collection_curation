@@ -14,6 +14,7 @@ def import_file(excel_file_name):
     return df
 
 def edit_column_names(df):
+    df = df.rename(columns={"AUM CATALOG TAGNUM":"CATALOG_NUMBER"})
     df.columns = [c.lower().replace(' ', '_') for c in df.columns]
     return df
 
@@ -87,11 +88,22 @@ def parse_collector_name(verbatum_collector):
     primary_collector = verbatum_collector.split(",")[0]
     primary_collector_split = primary_collector.split(".")
 
+def merge_dataframes(df_small, df_large):
+    # remove rows missing AUM number from small dataframe
+    df_small = df_small.dropna(subset=['catalog_number'])
+    df_small = df_small[['catalog_number','herp_tissue_number','ready_for_specify','tissue_box','tissue_tray','sample_type','tissue_present','tissue_type','tissue_preservative','loan_taken','old_box','tube_notes','preservative_present','tissue_notes','prepared_last_name_by1','prepared_first_name_by1','prepared_middle_name_by1','prepared_date_1','voucher_tagnum']]
+
+    df = pd.merge(df_small, df_large, on="catalog_number", how="left")
 
 if __name__ == "__main__":
     tissue_df = import_file(sys.argv[1])
+    voucher_df = import_file(sys.argv[2])
+    # to see list of column names, uncomment and do following:
+    # list(tissue.df)
     tissue_df = edit_column_names(tissue_df)
-    tissue_df = add_tissue_type(tissue_df)
+    voucher_df = edit_column_names(voucher_df)
+    #tissue_df = add_tissue_type(tissue_df)
+    tisvouch_df = merge_dataframes(tissue_df, voucher_df)
 
 
 
